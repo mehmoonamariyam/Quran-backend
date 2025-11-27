@@ -62,6 +62,15 @@ const signup = async (req, res) => {
   }
 };
 
+const login = async(req, res)=>{
+  try{
+  const {username, password} = req.body
+  }catch(error){
+    
+  }
+
+}
+
 
 
 module.exports = { signup };
