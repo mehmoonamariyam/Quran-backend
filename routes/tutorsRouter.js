@@ -1,8 +1,14 @@
-const express = require('express');
-const { getAllTutors } = require('../controllers/tutorsController');
+const express = require("express");
+const router = express.Router();
 
-const tutorRouter = express.Router();
+const { GetAllTutors, AddTutor, UpdateTutor, DeleteTutor } = require("../controllers/tutorsController");
 
-tutorRouter.get('/', getAllTutors)
+router.get("/",  GetAllTutors);
 
-module.exports = {tutorRouter}
+router.post("/", AddTutor);
+
+router.patch("/:id", UpdateTutor);
+
+router.delete("/:id", DeleteTutor);
+
+module.exports = { tutorRouter: router };
