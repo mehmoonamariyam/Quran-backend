@@ -26,8 +26,8 @@ const getSinglecourse = async (req, res) => {
     }
 };
 
-const createCourse = async(req, res) => {
+// const createCourse = async(req, res) => {
     
-}
+// }
 
 module.exports = { getAllCourses, getSinglecourse };
