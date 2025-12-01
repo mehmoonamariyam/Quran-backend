@@ -11,6 +11,7 @@ app.use(express.json());
 app.use('/api/courses', courseRouter)
 app.use('/api/tutors', tutorRouter)
 app.use('/signup', authRouter)
+app.use('/login', authRouter)
 
 
 mongoose.connect('mongodb+srv://mehmoonamaryam086:Moona422@cluster0.xdimqfm.mongodb.net/Quran')
