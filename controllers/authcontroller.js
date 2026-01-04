@@ -5,7 +5,6 @@ const jwt = require("jsonwebtoken");
 const signup = async (req, res) => {
   try {
     let { username, email, password } = req.body;
- 
 
     if (!username || !email || !password) {
       return res.status(400).json({ success: false, message: "All fields are required" });
@@ -34,11 +33,12 @@ const signup = async (req, res) => {
     const created = await User.create({
       username,
       email,
-      password: hashPassword
+      password: hashPassword,
+      role: "user"  // <<< IMPORTANT
     });
 
     const token = jwt.sign(
-      { id: created._id, username: created.username },
+      { id: created._id, username: created.username, role: created.role },
       process.env.JWT_SECRET || "secretKey",
       { expiresIn: "1h" }
     );
@@ -51,6 +51,7 @@ const signup = async (req, res) => {
         id: created._id,
         username: created.username,
         email: created.email,
+        role: created.role,
         status: created.status
       }
     });
@@ -63,37 +64,36 @@ const signup = async (req, res) => {
   }
 };
 
-const login = async(req, res)=>{
-  let {username, password} = req.body
-  console.log(req.body);
-  try{
-  
-  const user = await User.findOne({ username });
-    if (!user) return res.status(400).json({ message: 'User not found' });
+const login = async (req, res) => {
+  let { username, password } = req.body;
 
-   
+  try {
+    const user = await User.findOne({ username });
+    if (!user) return res.status(400).json({ message: "User not found" });
+
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid password' });
+    if (!isMatch) return res.status(400).json({ message: "Invalid password" });
 
-  
     const token = jwt.sign(
-      { id: user._id, username: user.username },
-      'loginsecret',
-      { expiresIn: '1h' }
+      { id: user._id, username: user.username, role: user.role },
+      "loginsecret",
+      { expiresIn: "1h" }
     );
 
-  
-    res.status(200).json({
-      message: 'Login successful',
+    return res.status(200).json({
+      message: "Login successful",
       token,
-      user: { id: user._id, email: user.email, username: user.username },
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        role: user.role
+      }
     });
-  }catch(error){
-      console.error(err);
-    res.status(500).json({ message: 'Server error' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
-
-}
-
+};
 
 module.exports = { signup, login };
