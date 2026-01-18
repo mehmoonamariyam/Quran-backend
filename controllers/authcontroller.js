@@ -2,97 +2,89 @@ const { User } = require("../models/auth");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+/* ================= SIGNUP ================= */
 const signup = async (req, res) => {
   try {
     let { username, email, password } = req.body;
 
     if (!username || !email || !password) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+      return res.status(400).json({ message: "All fields are required" });
     }
 
     username = username.trim();
     email = email.trim().toLowerCase();
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ success: false, message: "Invalid email address" });
-    }
-
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-    if (existingUser) {
-      if (existingUser.email === email) {
-        return res.status(400).json({ success: false, message: "Email already registered" });
-      }
-      if (existingUser.username === username) {
-        return res.status(400).json({ success: false, message: "Username already taken" });
-      }
-    }
-
-    const hashPassword = await bcrypt.hash(password, 12);
-
-    const created = await User.create({
-      username,
-      email,
-      password: hashPassword,
-      role: "user"  // <<< IMPORTANT
+    // check existing user
+    const exists = await User.findOne({
+      $or: [{ email }, { username }],
     });
 
-    const token = jwt.sign(
-      { id: created._id, username: created.username, role: created.role },
-      process.env.JWT_SECRET || "secretKey",
-      { expiresIn: "1h" }
-    );
+    if (exists) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    await User.create({
+      username,
+      email,
+      password: hashedPassword,
+      role: "user", // admin MongoDB se manually set hoga
+    });
 
     return res.status(201).json({
       success: true,
-      message: "User created successfully",
-      token,
-      user: {
-        id: created._id,
-        username: created.username,
-        email: created.email,
-        role: created.role,
-        status: created.status
-      }
+      message: "Signup successful",
     });
   } catch (error) {
-    if (error.code === 11000) {
-      return res.status(409).json({ success: false, message: "Email or username already registered" });
-    }
     console.error(error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
+/* ================= LOGIN ================= */
 const login = async (req, res) => {
-  let { username, password } = req.body;
-
   try {
-    const user = await User.findOne({ username });
-    if (!user) return res.status(400).json({ message: "User not found" });
+    const { username, password } = req.body;
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid password" });
+    if (!username || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(400).json({ message: "Invalid password" });
+    }
 
     const token = jwt.sign(
-      { id: user._id, username: user.username, role: user.role },
-      "loginsecret",
+      {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+      },
+      process.env.JWT_SECRET, // ✅ ENV se
       { expiresIn: "1h" }
     );
 
     return res.status(200).json({
+      success: true,
       message: "Login successful",
       token,
       user: {
         id: user._id,
-        email: user.email,
         username: user.username,
-        role: user.role
-      }
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
