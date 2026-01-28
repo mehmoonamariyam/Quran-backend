@@ -2,7 +2,7 @@ const { Course } = require("../models/Course");
 
 const getAllCourses = async (req, res) => {
     try {
-        const courses = await Course.find();
+        const courses = await Course.find().sort({ order: 1 });
         return res.json(courses);
     } catch (error) {
         return res.status(500).json({ error: "Server error while fetching courses" });
