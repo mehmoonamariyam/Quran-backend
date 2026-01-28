@@ -21,7 +21,7 @@ app.use("/api/courses", courseRouter);
 app.use("/api/tutors", tutorRouter);
 app.use("/api/auth", authRouter); // ✅ FIXED
 app.use("/api/reviews", reviewRouter);
-app.use("/api/free-trial", enrollRouter);
+app.use("/api/enroll", enrollRouter);
 app.use("/api/users", userRouter);
 
 

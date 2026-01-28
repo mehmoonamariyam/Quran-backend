@@ -3,7 +3,10 @@ const { addEnrollment, getEnrollments } = require("../controllers/enrollControll
 
 const enrollRouter = express.Router();
 
+// Submit a new enrollment
 enrollRouter.post("/", addEnrollment);
+
+// Get all enrollments (for admin)
 enrollRouter.get("/", getEnrollments);
 
 module.exports = { enrollRouter };
